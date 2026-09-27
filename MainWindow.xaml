@@ -1,0 +1,178 @@
+<Window x:Class="SonderFold.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SonderFold" Width="460" Height="560" MinWidth="380" MinHeight="300" ResizeMode="CanResize"
+        Background="{StaticResource Bg}" Foreground="{StaticResource Fg}"
+        WindowStartupLocation="CenterScreen" FontSize="12.5">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="14,10,10,12">
+        <TextBlock x:Name="StatusText" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+        <TextBlock x:Name="ReadingText" FontFamily="Consolas" FontSize="11.5" Margin="0,0,0,8" Text="waiting for sensor…"/>
+
+        <Grid Margin="0,0,0,4">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBlock Text="Effect" VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <ComboBox x:Name="EffectBox" Grid.Column="1" SelectedIndex="0">
+                <ComboBoxItem Content="Ghost – screen stays in place"/>
+                <ComboBoxItem Content="Duo – desktop swells at the hinge"/>
+            </ComboBox>
+            <Button x:Name="PreviewButton" Grid.Column="2" Content="▶ Preview" Padding="8,2" Margin="8,0,0,0"/>
+        </Grid>
+        <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+            <CheckBox x:Name="EnabledBox" Content="Enabled" IsChecked="True" Margin="0,0,16,0"/>
+            <CheckBox x:Name="ClearStillBox" Content="Clear when the lid is still" IsChecked="True"/>
+        </StackPanel>
+
+        <Expander Header="Timing" IsExpanded="True" Margin="0,4,0,0" FontWeight="SemiBold">
+          <StackPanel Margin="4,4,0,4" TextElement.FontWeight="Normal">
+            <Grid Margin="0,1,0,1" ToolTip="The effect starts below this lid angle, or below where the lid last rested if that is lower.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Starts below (°)" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="ClearAngleSlider" Grid.Column="1" Minimum="5" Maximum="175" Value="110" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=ClearAngleSlider, StringFormat={}{0:F0}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="Seconds of holding the lid still before the screen clears.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Clear when still (s)" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="StillSlider" Grid.Column="1" Minimum="0.2" Maximum="30" Value="2" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=StillSlider, StringFormat={}{0:F1}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="Lid angle where the picture starts fading to black.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Fade starts at (°)" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="FadeStartSlider" Grid.Column="1" Minimum="0" Maximum="90" Value="30" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=FadeStartSlider, StringFormat={}{0:F0}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="Lid angle where the picture is completely black.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Fully black at (°)" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="FadeEndSlider" Grid.Column="1" Minimum="0" Maximum="90" Value="15" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=FadeEndSlider, StringFormat={}{0:F0}, Mode=OneWay}"/>
+            </Grid>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Sensitivity" IsExpanded="True" Margin="0,4,0,0" FontWeight="SemiBold">
+          <StackPanel Margin="4,4,0,4" TextElement.FontWeight="Normal">
+            <Grid Margin="0,1,0,1" ToolTip="Ignore lid movements smaller than this. Raise it if the screen wiggles.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Deadzone (°)" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="DeadzoneSlider" Grid.Column="1" Minimum="0" Maximum="5" Value="5" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=DeadzoneSlider, StringFormat={}{0:F2}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="Lower = steadier when still. Higher = quicker to react to slow movement.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Stability" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="StabilitySlider" Grid.Column="1" Minimum="0.05" Maximum="5" Value="5" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=StabilitySlider, StringFormat={}{0:F2}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="How fast the effect follows quick lid movement. Lower = smoother.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Response" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="ResponseSlider" Grid.Column="1" Minimum="0.001" Maximum="1" Value="1" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=ResponseSlider, StringFormat={}{0:F3}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="Ignore readings disturbed by a hand push or bounce. Lower ignores more.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Shake rejection (g)" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="ShakeSlider" Grid.Column="1" Minimum="0.02" Maximum="100" Value="100" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=ShakeSlider, StringFormat={}{0:F2}, Mode=OneWay}"/>
+            </Grid>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Look" IsExpanded="False" Margin="0,4,0,0" FontWeight="SemiBold">
+          <StackPanel Margin="4,4,0,4" TextElement.FontWeight="Normal">
+            <Grid Margin="0,1,0,1" ToolTip="Blur strength.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Softness" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="SoftnessSlider" Grid.Column="1" Minimum="0" Maximum="2" Value="0.65" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=SoftnessSlider, StringFormat={}{0:F2}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="Darkening toward the top.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Shadow" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="ShadowSlider" Grid.Column="1" Minimum="0" Maximum="2" Value="0.65" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=ShadowSlider, StringFormat={}{0:F2}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="How much the Duo effect swells (Duo only).">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Duo swell" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="PerspectiveSlider" Grid.Column="1" Minimum="0" Maximum="2" Value="0.7" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=PerspectiveSlider, StringFormat={}{0:F2}, Mode=OneWay}"/>
+            </Grid>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Ghost perspective" IsExpanded="False" Margin="0,4,0,0" FontWeight="SemiBold">
+          <StackPanel Margin="4,4,0,4" TextElement.FontWeight="Normal">
+            <Grid Margin="0,1,0,1" ToolTip="Distance from your virtual eye to the screen, in screen heights. Lower = stronger effect.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Eye distance" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="ViewerDistanceSlider" Grid.Column="1" Minimum="0.3" Maximum="6" Value="1.9" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=ViewerDistanceSlider, StringFormat={}{0:F2}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="Height of your virtual eye above the hinge, in screen heights.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Eye height" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="EyeHeightSlider" Grid.Column="1" Minimum="0" Maximum="4" Value="1.6" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=EyeHeightSlider, StringFormat={}{0:F2}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="Multiplies the real lid movement (2 = twice as strong).">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Tilt strength" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="TiltStrengthSlider" Grid.Column="1" Minimum="0" Maximum="3" Value="1" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=TiltStrengthSlider, StringFormat={}{0:F2}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="The effect never tilts further than this.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Max tilt (°)" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="MaxTiltSlider" Grid.Column="1" Minimum="5" Maximum="89" Value="85" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=MaxTiltSlider, StringFormat={}{0:F0}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="How much the sides pull inward. 0 = off.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Horizontal squeeze" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="HStrengthSlider" Grid.Column="1" Minimum="0" Maximum="3" Value="0.4" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=HStrengthSlider, StringFormat={}{0:F2}, Mode=OneWay}"/>
+            </Grid>
+            <Grid Margin="0,1,0,1" ToolTip="How much the image compresses top to bottom. 0 = off.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Vertical squeeze" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="VStrengthSlider" Grid.Column="1" Minimum="0" Maximum="3" Value="0.36" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=VStrengthSlider, StringFormat={}{0:F2}, Mode=OneWay}"/>
+            </Grid>
+            <CheckBox x:Name="FixedPlaneBox" IsChecked="True" Content="Fixed desktop plane angle" Margin="0,3,0,1"
+                      ToolTip="Anchor the desktop to a fixed angle instead of where the lid last rested."/>
+            <Grid Margin="0,1,0,1" ToolTip="The fixed desktop plane angle, used when the box above is ticked.">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Plane angle (°)" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Slider x:Name="PlaneAngleSlider" Grid.Column="1" Minimum="45" Maximum="175" Value="105" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Margin="6,0,0,0" Padding="1" VerticalContentAlignment="Center" KeyDown="OnValueBoxKeyDown" LostFocus="OnValueBoxLostFocus"
+                         Text="{Binding Value, ElementName=PlaneAngleSlider, StringFormat={}{0:F0}, Mode=OneWay}"/>
+            </Grid>
+          </StackPanel>
+        </Expander>
+
+        <DockPanel Margin="0,8,0,0">
+            <Button x:Name="ResetButton" Content="Reset to defaults" Padding="8,2" DockPanel.Dock="Right"/>
+            <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="11"
+                       Text="Hover a setting for help. Type any number and press Enter."/>
+        </DockPanel>
+    </StackPanel>
+    </ScrollViewer>
+</Window>
